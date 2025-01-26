@@ -1,11 +1,10 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 import qrcode
 from io import BytesIO
 
-# Set up session state to store participant results
+# Set up session state to store participant results if it's not already present
 if "participants" not in st.session_state:
     st.session_state.participants = []
 
@@ -21,11 +20,11 @@ st.image(buffer.getvalue(), caption="Scan this QR Code")
 # Participant Information
 name = st.text_input("Enter your name to start:", "")
 
+# Collect answers if the name is provided
 if name:
     st.subheader(f"Hello, {name}! Answer the questions below:")
 
     # Questions with Likert scale
-    st.markdown("### Questions:")
     q1 = st.slider("Question 1: Your opinion on X?", 1, 5, 3)
     q2 = st.slider("Question 2: Your stance on Y?", 1, 5, 3)
     q3 = st.slider("Question 3: How do you feel about Z?", 1, 5, 3)
@@ -42,20 +41,24 @@ if name:
     leftist_percent = (leftist_score / total) * 100
 
     if st.button("Submit"):
-        # Save this participant's results
-        st.session_state.participants.append({
+        # Save this participant's results to the session state
+        participant_data = {
             "name": name,
             "denial": denial_percent,
             "liberal": liberal_percent,
             "leftist": leftist_percent
-        })
+        }
+        st.session_state.participants.append(participant_data)
+        st.success(f"Thanks {name}! Your results have been saved.")
 
 # Display all results (only after at least one participant has completed)
 if st.session_state.participants:
     st.subheader("Results for All Participants:")
+
+    # Show results for each participant
     for participant in st.session_state.participants:
         st.markdown(f"### {participant['name']}'s Results:")
-        
+
         # Create bar chart
         categories = ["Denial", "Liberal", "Leftist"]
         percentages = [participant["denial"], participant["liberal"], participant["leftist"]]
@@ -72,3 +75,4 @@ if st.session_state.participants:
             "Percentage": percentages
         })
         st.table(df)
+
